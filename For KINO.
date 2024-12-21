@@ -1,0 +1,93 @@
+from collections import Counter
+from colorama import Fore, Style, init
+
+
+draws = [
+
+    [6, 8, 11, 16, 17, 21, 22, 30, 33, 35, 39, 41, 48, 57, 62, 63, 67, 76, 78, 79],
+    [8, 12, 19, 22, 24, 27, 30, 37, 39, 42, 46, 48, 49, 52, 57, 64, 65, 68, 79, 80],
+    [5, 10, 12, 14, 17, 19, 24, 27, 33, 38, 39, 43, 51, 53, 58, 65, 68, 69, 77, 79],
+    [2, 7, 8, 13, 14, 16, 19, 28, 29, 36, 42, 53, 54, 56, 69, 71, 72, 75, 76, 79],
+    [5, 10, 13, 17, 18, 23, 25, 31, 38, 41, 43, 45, 48, 50, 56, 62, 68, 69, 74, 76],
+    [7, 10, 14, 15, 20, 26, 31, 33, 36, 46, 48, 51, 54, 62, 64, 66, 68, 73, 75, 79],
+    [6, 10, 14, 16, 20, 22, 25, 26, 32, 41, 42, 45, 46, 52, 53, 58, 68, 71, 72, 80],
+    [9, 10, 16, 17, 19, 29, 30, 34, 36, 40, 42, 43, 46, 50, 61, 63, 65, 69, 74, 80],
+    [7, 13, 15, 21, 34, 35, 37, 40, 42, 48, 54, 57, 58, 59, 65, 71, 72, 74, 76, 78],
+    [5, 8, 9, 15, 21, 25, 26, 27, 30, 31, 34, 43, 45, 56, 58, 65, 73, 75, 77, 79],
+    [8, 9, 15, 17, 20, 31, 37, 39, 46, 52, 58, 59, 62, 65, 68, 70, 73, 75, 78, 80],
+    [3, 6, 7, 12, 16, 18, 20, 23, 27, 34, 36, 40, 42, 47, 51, 58, 62, 63, 74, 77],
+    [2, 5, 6, 9, 18, 22, 24, 27, 28, 33, 38, 39, 48, 50, 53, 57, 65, 72, 74, 77],
+    [1, 7, 9, 18, 20, 26, 30, 32, 33, 35, 39, 43, 46, 48, 57, 68, 69, 70, 74, 80],
+    [1, 2, 3, 5, 15, 16, 18, 19, 20, 28, 33, 36, 45, 49, 56, 61, 68, 72, 73, 78],
+    [8, 16, 18, 23, 24, 25, 32, 38, 39, 44, 47, 49, 59, 60, 61, 63, 68, 72, 73, 75],
+    [3, 4, 7, 8, 24, 28, 29, 32, 38, 39, 40, 47, 48, 62, 63, 67, 71, 73, 74, 78],
+    [13, 16, 17, 19, 20, 26, 27, 29, 31, 37, 42, 43, 49, 52, 53, 57, 58, 64, 70, 73],
+    [3, 4, 13, 14, 18, 19, 20, 23, 25, 31, 34, 40, 41, 44, 47, 49, 52, 54, 68, 72],
+    [10, 15, 19, 20, 23, 31, 32, 44, 46, 47, 51, 52, 53, 56, 64, 67, 69, 70, 71, 76],
+    [5, 11, 16, 24, 36, 38, 44, 45, 49, 50, 54, 56, 61, 63, 64, 70, 72, 73, 75, 80],
+    [3, 4, 6, 11, 16, 18, 24, 30, 35, 39, 46, 47, 48, 49, 60, 62, 72, 74, 76, 78],
+    [5, 12, 14, 16, 19, 24, 26, 30, 34, 35, 37, 43, 45, 50, 58, 59, 61, 63, 67, 74],
+
+]
+
+frequency = Counter()
+previous_freq_dists = []
+
+for draw_index, draw in enumerate(draws, start=1):
+    previous_frequency = frequency.copy()
+
+    for num in draw:
+        frequency[num] += 1
+
+    freq_dist = Counter(frequency.values())
+    total_appeared = sum(freq_dist.values())
+    freq_zero = 80 - total_appeared
+
+    transitions = {f"{i} to {i + 1}": 0 for i in range(15)}
+    for num in range(1, 81):
+        prev = previous_frequency[num]
+        curr = frequency[num]
+        if curr == prev + 1:
+            transitions[f"{prev} to {curr}"] += 1
+
+    print(f"{Fore.CYAN}{Style.BRIGHT}ΚΛΗΡΩΣΗ {draw_index}:{Style.RESET_ALL}")
+    print()
+    prev_freq_dist = previous_freq_dists[-1] if previous_freq_dists else None
+    prev_draw_num = draw_index - 1
+
+    for transition, count in transitions.items():
+        start_freq, end_freq = map(int, transition.split(" to "))
+        total_with_end_freq = freq_dist[end_freq] if end_freq in freq_dist else 0
+
+        nums_with_end_freq = [num for num, freq in frequency.items() if freq == end_freq]
+
+        prev_count = None
+        if prev_freq_dist is not None:
+            if start_freq == 0:
+                prev_count = 80 - sum(prev_freq_dist.values())
+            else:
+                prev_count = prev_freq_dist.get(start_freq, 0)
+
+        previous_freq_info = ""
+        if prev_freq_dist is not None and prev_count is not None:
+            previous_freq_info = f"(freq_{start_freq}= {prev_count})"
+
+        percentage = None
+        if prev_count is not None and prev_count > 0:
+            percentage = (count / prev_count) * 100
+
+        if percentage is not None:
+            print(f"Απο freq_{Fore.BLUE}{transition}{Style.RESET_ALL}= {count} {previous_freq_info} "
+                  f"(σύνολο με freq_{end_freq}= {total_with_end_freq}) -{Fore.RED} Ποσοστό μεταβασης:{percentage:.2f}% {Style.RESET_ALL}"
+                  f"(οι {total_with_end_freq} αριθμοί με freq_{end_freq} είναι {nums_with_end_freq})")
+        else:
+            print(f"Απο freq_{Fore.BLUE}{transition}{Style.RESET_ALL}= {count} ")
+
+
+    nums_with_freq_zero = [num for num in range(1, 81) if frequency[num] == 0]
+    print(f"{Fore.BLUE}Αριθμοί με {Style.RESET_ALL}freq_0 = {freq_zero}{Fore.BLUE} και είναι οι {Style.RESET_ALL}{nums_with_freq_zero}")
+    print()
+    print("-" * 40)
+    print()
+
+    previous_freq_dists.append(freq_dist)
